@@ -11,14 +11,13 @@
 
 import marimo
 
-__generated_with = "0.14.10"
+__generated_with = "0.23.15"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     # PROTOTYPE — baseline recommender thin slice
 
     **Throwaway code** answering [AniList_Rec#9](https://github.com/Ari-03/AniList_Rec/issues/9):
@@ -33,8 +32,7 @@ def _(mo):
     low-score negatives inform eval but not the model; svanoo has no REPEATING status,
     so strong positives = favourited or score ≥ 8; franchise "direct continuation" ≈
     same franchise cluster; favourites not fetched from AniList at serve time.
-    """
-    )
+    """)
     return
 
 
@@ -82,6 +80,7 @@ def _(Path, mo):
         NEG,
         N_TEST,
         N_VAL,
+        PARTIAL,
         PLAN,
         SEED,
         STD,
@@ -480,7 +479,8 @@ def _(
             "top_pct": np.array(top_pct),
             "coverage10": seen10.mean(),
         }
-    return candidate_mask, collapse_targets, evaluate, pop_pct, user_arrays
+
+    return candidate_mask, evaluate, pop_pct, user_arrays
 
 
 @app.cell
@@ -560,7 +560,11 @@ def _(holdout, json, pl, urllib, user_arrays, username_input):
         req = urllib.request.Request(
             "https://graphql.anilist.co",
             data=json.dumps({"query": q, "variables": {"name": name}}).encode(),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "AniList-Rec-prototype/0.1 (github.com/Ari-03/AniList_Rec)",
+            },
         )
         payload = json.load(urllib.request.urlopen(req, timeout=30))
         rows = []
