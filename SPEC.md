@@ -110,14 +110,18 @@ Implement and compare, in this order of expected accuracy:
    Trains on molab's GPU using svanoo timestamps. Fallback if list-edit timestamps prove
    unordered: disable/shuffle positional embeddings, degrading to a set encoder.
 
-**Baseline: item-item BM25** (`implicit`; 19 s fit on 300k users). The shipping bar, measured
-live by the [prototype (#9)](https://github.com/Ari-03/AniList_Rec/issues/9) on 9,963 held-out
-test users, dial off:
+**Baseline: item-item BM25** (`implicit`; 71 s fit on the uncapped 1.02M training users). The
+shipping bar, measured at full scale by the offline pipeline
+([#14](https://github.com/Ari-03/AniList_Rec/issues/14), `uv run baseline` →
+[reports/baseline_bar.md](reports/baseline_bar.md)) on 9,971 held-out test users, dial off:
 
 | model | NDCG@10 [95% CI] | recall@10 | recall@50 | niche pop lift | coverage@10 |
 |---|---|---|---|---|---|
-| item-item BM25 | 0.1287 [0.1251, 0.1323] | 0.113 | 0.325 | +3.1 | 6.1% |
-| MostPopular | 0.1955 [0.1914, 0.1992] | 0.123 | 0.293 | +7.4 | 1.0% |
+| item-item BM25 | 0.1300 [0.1263, 0.1335] | 0.112 | 0.323 | +2.9 | 6.3% |
+| MostPopular | 0.1983 [0.1947, 0.2021] | 0.124 | 0.291 | +7.5 | 0.9% |
+
+(The prototype's capped 300k-user run, on its slightly different 9,963-user holdout, landed
+within these CIs — nothing at full scale changed the picture.)
 
 **A candidate ships only if it beats *both* numbers on NDCG@10** without MostPopular's degenerate
 1% coverage (the Cremonesi top-N trap, confirmed live in this data). Shared engineering note:
@@ -238,9 +242,10 @@ The architecture stays manga-extensible without speccing the manga model (out of
 
 ## 9. Known simplifications to revisit during the build
 
-Carried from the [prototype (#9)](https://github.com/Ari-03/AniList_Rec/issues/9):
+Carried from the [prototype (#9)](https://github.com/Ari-03/AniList_Rec/issues/9); the pipeline
+itself now lives in the tested `anilist_rec` package with training uncapped
+([#14](https://github.com/Ari-03/AniList_Rec/issues/14)):
 
-- Training users capped at 300k of ~1M (config constant; uncap for real runs).
 - "Direct continuation" is approximated as same franchise cluster (union-find over relations) —
   acceptable for eval, verify it doesn't over-suppress at serve time.
 - BM25 baseline consumes positives only; candidates should use the full §1 confidence mapping.
