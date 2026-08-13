@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 baseline = "anilist_rec.baseline:main"
+demo = "anilist_rec.demo:main"
 
 [dependency-groups]
 dev = [
