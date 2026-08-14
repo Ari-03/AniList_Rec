@@ -32,6 +32,9 @@ from anilist_rec.split import build_holdout
 # 250k until validation NDCG turns down (max L2_MAX_STEPS climb steps).
 L2_ANCHORS = [50_000.0]
 L2_CLIMB_START = 250_000.0
+# gram-norm rescales the diagonal to ~1, so λ lives in a different range
+L2_ANCHORS_NORM = [0.25]
+L2_CLIMB_START_NORM = 1.0
 L2_CLIMB_FACTOR = 4.0
 L2_MAX_STEPS = 8
 TOPK_SWEEP = [50, 100, 200, 400, 800]
@@ -137,9 +140,11 @@ def main() -> None:
             b = b_l2  # keep only the best dense B in memory
         return s["ndcg10"]
 
-    for l2 in L2_ANCHORS:
+    anchors = L2_ANCHORS_NORM if args.gram_norm else L2_ANCHORS
+    for l2 in anchors:
         try_l2(l2)
-    l2, prev = L2_CLIMB_START, -1.0
+    l2 = L2_CLIMB_START_NORM if args.gram_norm else L2_CLIMB_START
+    prev = -1.0
     for _ in range(L2_MAX_STEPS):
         ndcg = try_l2(l2)
         if ndcg < prev:
