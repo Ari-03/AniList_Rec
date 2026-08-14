@@ -60,10 +60,18 @@ class FoldinVector:
 
 
 def build_foldin(user_list: UserAnimeList, item_pos: dict[int, int]) -> FoldinVector:
-    """Map a fetched list onto the corpus; ids outside it drop (SPEC §3)."""
+    """Map a fetched list onto the corpus; ids outside it drop (SPEC §3).
+
+    Entries are walked in list-edit order (updatedAt ascending, undated first —
+    the split.py convention), so fold_idx doubles as the sequence input for
+    order-aware models; bag-of-items models see the same set either way.
+    """
     fold_idx, fold_w, watched, plan_idx = [], [], [], []
     n_unmapped = 0
-    for entry in user_list.entries:
+    ordered = sorted(
+        user_list.entries, key=lambda e: (e.updated_at is not None, e.updated_at or 0)
+    )
+    for entry in ordered:
         idx = item_pos.get(entry.mal_id) if entry.mal_id is not None else None
         if idx is None:
             n_unmapped += 1

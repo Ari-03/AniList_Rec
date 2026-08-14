@@ -9,6 +9,7 @@ dependencies = [
     "numpy>=2.0",
     "polars>=1.19",
     "scipy>=1.14",
+    "torch>=2.6",
 ]
 
 [project.scripts]
@@ -16,6 +17,17 @@ baseline = "anilist_rec.baseline:main"
 demo = "anilist_rec.demo:main"
 ease = "anilist_rec.ease:main"
 als = "anilist_rec.als:main"
+sasrec = "anilist_rec.sasrec:main"
+
+# CPU wheels: the dev boxes have no CUDA and the PyPI linux wheels drag the
+# full nvidia stack. A molab (GPU) run swaps this index for the cu-* one.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [dependency-groups]
 dev = [

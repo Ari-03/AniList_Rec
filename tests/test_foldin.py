@@ -21,6 +21,7 @@ def make_entry(media_id: int, mal_id: int | None, status: str, **kw) -> ListEntr
         progress=kw.get("progress"),
         repeat=kw.get("repeat", 0),
         episodes=kw.get("episodes"),
+        updated_at=kw.get("updated_at"),
     )
 
 
@@ -72,6 +73,19 @@ def test_build_foldin_routes_and_drops():
     assert csr.shape == (1, 4)
     assert csr[0, 0] == 2.0
     assert csr.nnz == 1
+
+
+def test_build_foldin_orders_by_list_edit_time():
+    item_pos = {10: 0, 20: 1, 30: 2}
+    user = UserAnimeList(
+        entries=[
+            make_entry(100, 10, "COMPLETED", entry_id=1, updated_at=300),
+            make_entry(200, 20, "COMPLETED", entry_id=2, updated_at=100),
+            make_entry(300, 30, "COMPLETED", entry_id=3),  # undated sorts first
+        ],
+    )
+    fold = build_foldin(user, item_pos)
+    assert fold.fold_idx == [2, 1, 0]  # sequence models read this order
 
 
 def test_favourite_matches_on_anilist_media_id():

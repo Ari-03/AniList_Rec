@@ -61,6 +61,7 @@ class ListEntry:
     progress: int | None
     repeat: int
     episodes: int | None
+    updated_at: int | None = None  # unix epoch of the last list edit (sequence order)
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,7 @@ query ($name: String) {
         score(format: POINT_100)
         progress
         repeat
+        updatedAt
         media { id idMal episodes }
       }
     }
@@ -170,6 +172,7 @@ class AniListClient:
                         progress=e.get("progress"),
                         repeat=int(e.get("repeat") or 0),
                         episodes=media.get("episodes"),
+                        updated_at=e.get("updatedAt") or None,
                     ),
                 )
         return list(by_entry_id.values())

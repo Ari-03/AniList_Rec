@@ -69,7 +69,11 @@ class Recommender:
         self, fold: FoldinVector, dial: float = 0.0, limit: int = 20
     ) -> list[Recommendation]:
         """The internal scoring layer (SPEC §6 secondary endpoint)."""
-        scores = self.score_fn(fold.to_csr(len(self.item_ids)))[0]
+        fold_csr = fold.to_csr(len(self.item_ids))
+        if getattr(self.score_fn, "takes_batch", False):  # sequence models read fold_idx order
+            scores = self.score_fn(fold_csr, [fold])[0]
+        else:
+            scores = self.score_fn(fold_csr)[0]
         scores = apply_dial(scores, self.item_counts, dial)
         scores[~candidate_mask(self.franchise, fold.watched, fold.plan_idx)] = -np.inf
 

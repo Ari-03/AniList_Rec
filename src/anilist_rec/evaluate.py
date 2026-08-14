@@ -130,7 +130,13 @@ def evaluate(
             cols += user.fold_idx
             vals += user.fold_w
         fold_csr = sp.csr_matrix((vals, (rows, cols)), shape=(len(batch), n_items), dtype="float32")
-        scores = score_fn(fold_csr)
+        # Sequence models (SPEC §4 SASRec) need the order the CSR can't carry:
+        # scorers marked takes_batch also get the batch itself, whose fold_idx
+        # order is whatever temporal order the caller prepared.
+        if getattr(score_fn, "takes_batch", False):
+            scores = score_fn(fold_csr, batch)
+        else:
+            scores = score_fn(fold_csr)
 
         for r, user in enumerate(batch):
             s = scores[r].copy()
