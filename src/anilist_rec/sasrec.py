@@ -423,6 +423,7 @@ def main() -> None:
     device = args.device
     if device == "auto":
         device = "cuda" if torch.cuda.is_available() else "cpu"
+    device_label = f"cuda ({torch.cuda.get_device_name(0)})" if device == "cuda" else "cpu"
     stage(f"train (d={args.d}, {args.blocks} blocks, {device}, early stop on val NDCG@10)")
     model = make_model(n_items, args.d, args.blocks, args.heads, args.dropout, cfg.seed)
     model.use_positions = not args.set_encoder
@@ -494,6 +495,7 @@ def main() -> None:
         run={
             "n_train_users": n_train_users,
             "n_events": len(items),
+            "device": device_label,
             "train_walltime_s": train_walltime,
             "best_epoch": best_epoch,
             "artifact_mb": artifact_mb,
@@ -551,8 +553,7 @@ uniform negatives, Adam lr={args.lr:g}, batch {args.batch} users.
 {run["n_train_users"]:,} training users, {run["n_events"]:,} events
 (most recent {MAXLEN + 1} per user). Early stop on validation NDCG@10;
 best epoch {run["best_epoch"]}, total training walltime
-{run["train_walltime_s"]:.0f}s (CPU — molab's GPU was not reachable from this
-run's environment; the ticket resolution records the deviation).
+{run["train_walltime_s"]:.0f}s on {run["device"]}.
 
 ## Epoch curve (validation users)
 
