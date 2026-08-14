@@ -230,6 +230,7 @@ def train_epoch(model, items, weights, offsets, batch_size, n_items, optimizer, 
     import torch.nn.functional as F
 
     model.train()
+    device = next(model.parameters()).device
     n_users = len(offsets) - 1
     order = rng.permutation(n_users)
     total_loss, total_w = 0.0, 0.0
@@ -238,8 +239,8 @@ def train_epoch(model, items, weights, offsets, batch_size, n_items, optimizer, 
         seq_list = [items[offsets[u] : offsets[u + 1]] for u in chunk]
         w_list = [weights[offsets[u] : offsets[u + 1]] for u in chunk]
         seqs, conf = pad_batch(seq_list, w_list, MAXLEN + 1)
-        seqs_t = torch.from_numpy(seqs)
-        conf_t = torch.from_numpy(conf)
+        seqs_t = torch.from_numpy(seqs).to(device)
+        conf_t = torch.from_numpy(conf).to(device)
         inputs, in_conf = seqs_t[:, :-1], conf_t[:, :-1]
         targets, tgt_conf = seqs_t[:, 1:], conf_t[:, 1:]
 
@@ -252,7 +253,9 @@ def train_epoch(model, items, weights, offsets, batch_size, n_items, optimizer, 
             continue
 
         emb = model.item_emb.weight
-        negs = torch.randint(1, n_items + 1, (N_NEGATIVES,), generator=generator)
+        negs = torch.randint(
+            1, n_items + 1, (N_NEGATIVES,), generator=generator, device=device
+        )
         pos_logit = (hv * emb[tv]).sum(-1, keepdim=True)
         neg_logit = hv @ emb[negs].T
         neg_logit = neg_logit.masked_fill(negs.unsqueeze(0) == tv.unsqueeze(1), -torch.inf)
@@ -278,6 +281,7 @@ def sasrec_scorer(model, sub_batch: int = 256) -> ScoreFn:
     import torch
 
     n_items = model.item_emb.weight.shape[0] - 1
+    device = next(model.parameters()).device
 
     @torch.no_grad()
     def score(fold_csr: sp.csr_matrix, batch: list | None = None) -> np.ndarray:
@@ -291,8 +295,8 @@ def sasrec_scorer(model, sub_batch: int = 256) -> ScoreFn:
             seq_list = [np.asarray(u.fold_idx, dtype=np.int64) + 1 for u in users]
             w_list = [np.asarray(u.fold_w, dtype=np.float32) for u in users]
             seqs, conf = pad_batch(seq_list, w_list, MAXLEN)
-            h = model(torch.from_numpy(seqs), torch.from_numpy(conf))[:, -1]
-            out[lo : lo + len(users)] = (h @ item_mat).numpy()
+            h = model(torch.from_numpy(seqs).to(device), torch.from_numpy(conf).to(device))[:, -1]
+            out[lo : lo + len(users)] = (h @ item_mat).cpu().numpy()
         return out
 
     score.takes_batch = True  # type: ignore[attr-defined]
@@ -362,6 +366,12 @@ def main() -> None:
         action="store_true",
         help="documented fallback: no positional embeddings (unordered timestamps)",
     )
+    parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="auto = cuda when available (molab); the dev boxes fall back to cpu",
+    )
     parser.add_argument("--skip-ts-check", action="store_true")
     args = parser.parse_args()
     cfg = Config(data_dir=args.data_dir, seed=args.seed, train_user_cap=args.cap)
@@ -410,12 +420,16 @@ def main() -> None:
     val_users = eval_users(holdout_sorted, "val", item_pos)
     test_users = eval_users(holdout_sorted, "test", item_pos)
 
-    stage(f"train (d={args.d}, {args.blocks} blocks, early stop on val NDCG@10)")
+    device = args.device
+    if device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    stage(f"train (d={args.d}, {args.blocks} blocks, {device}, early stop on val NDCG@10)")
     model = make_model(n_items, args.d, args.blocks, args.heads, args.dropout, cfg.seed)
     model.use_positions = not args.set_encoder
+    model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.98))
     rng = np.random.default_rng(cfg.seed)
-    generator = torch.Generator().manual_seed(cfg.seed)
+    generator = torch.Generator(device=device).manual_seed(cfg.seed)
 
     train_t0 = time.perf_counter()
     epoch_log: list[dict] = []
@@ -464,7 +478,7 @@ def main() -> None:
 
     stage("artifact + report")
     cfg.derived_dir.mkdir(parents=True, exist_ok=True)
-    arrays = {k: v.numpy() for k, v in model.state_dict().items()}
+    arrays = {k: v.cpu().numpy() for k, v in model.state_dict().items()}
     np.savez_compressed(
         sasrec_artifact_path(cfg),
         __config__=np.array(
