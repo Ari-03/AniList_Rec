@@ -1,11 +1,12 @@
-"""Live fold-in demo (issue #15): pull a public AniList list and rank through
-the real serving path with the baseline model.
+"""Live fold-in demo (issues #15/#16/#17): pull a public AniList list and rank
+through the real serving path.
 
-    uv run demo Zackhacks
+    uv run demo Zackhacks                # baseline BM25
+    uv run demo Zackhacks --model ease   # EASE artifact (uv run ease first)
+    uv run demo Zackhacks --model als    # ALS artifact (uv run als first)
 
-Builds any missing offline artifacts first (signal table, holdout, BM25
-similarity — cached under data/derived/), so the first run does the full
-pipeline work and later runs start in seconds.
+The baseline builds any missing offline artifacts first (cached under
+data/derived/); the candidate models load their exported artifacts.
 """
 
 import argparse
@@ -46,9 +47,34 @@ def load_baseline_recommender(cfg: Config) -> Recommender:
     return Recommender(bm25_scorer(similarity), item_ids, franchise, item_counts, catalogue)
 
 
+def load_candidate_recommender(cfg: Config, model: str) -> Recommender:
+    """A candidate's exported artifact behind the same serving path."""
+    signals = build_signals(cfg)
+    item_ids = item_index(signals)
+    catalogue = pl.read_parquet(cfg.crosswalk_path)
+    franchise = build_franchise_index(catalogue, item_ids)
+    item_counts = np.load(cfg.item_counts_path)
+
+    if model == "ease":
+        from anilist_rec.ease import ease_artifact_path, ease_scorer
+
+        score_fn = ease_scorer(sp.load_npz(ease_artifact_path(cfg)))
+    else:
+        from anilist_rec.als import als_artifact_path, als_scorer
+
+        artifact = np.load(als_artifact_path(cfg))
+        score_fn = als_scorer(
+            artifact["item_factors"],
+            float(artifact["regularization"]),
+            float(artifact["alpha"]),
+        )
+    return Recommender(score_fn, item_ids, franchise, item_counts, catalogue)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("username")
+    parser.add_argument("--model", choices=["bm25", "ease", "als"], default="bm25")
     parser.add_argument("--dial", type=float, default=0.0)
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
@@ -56,8 +82,12 @@ def main() -> None:
     args = parser.parse_args()
 
     t0 = time.perf_counter()
-    rec = load_baseline_recommender(Config(data_dir=args.data_dir, seed=args.seed))
-    print(f"artifacts ready in {time.perf_counter() - t0:.1f}s")
+    cfg = Config(data_dir=args.data_dir, seed=args.seed)
+    if args.model == "bm25":
+        rec = load_baseline_recommender(cfg)
+    else:
+        rec = load_candidate_recommender(cfg, args.model)
+    print(f"{args.model} artifacts ready in {time.perf_counter() - t0:.1f}s")
 
     t0 = time.perf_counter()
     recs, fold = rec.recommend(args.username, dial=args.dial, limit=args.limit)
