@@ -13,7 +13,7 @@ import polars as pl
 import scipy.sparse as sp
 
 from anilist_rec.franchise import FranchiseIndex
-from anilist_rec.models import ScoreFn
+from anilist_rec.models import ScoreFn, apply_dial
 from anilist_rec.signals import GAIN, NEG, PLAN, STD, STRONG
 
 
@@ -115,8 +115,14 @@ def evaluate(
     franchise: FranchiseIndex,
     item_counts: np.ndarray,
     chunk: int = 1000,
+    dial: float = 0.0,
 ) -> EvalResult:
-    """Rank the full catalogue for each user and score the top-k against targets."""
+    """Rank the full catalogue for each user and score the top-k against targets.
+
+    `dial` applies the SPEC §1 popularity re-rank inside the harness, exactly as
+    the serving path does — architectures are compared dial-off (SPEC §5); the
+    §5 validation sweep for the winner passes dial > 0.
+    """
     n_items = len(item_counts)
     pop_pct = popularity_percentile(item_counts)
     ndcg10, rec10, rec50, regret10, prof_pct, top_pct = [], [], [], [], [], []
@@ -137,6 +143,8 @@ def evaluate(
             scores = score_fn(fold_csr, batch)
         else:
             scores = score_fn(fold_csr)
+        if dial:
+            scores = apply_dial(scores, item_counts, dial)
 
         for r, user in enumerate(batch):
             s = scores[r].copy()

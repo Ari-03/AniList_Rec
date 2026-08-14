@@ -24,6 +24,7 @@ demo = "anilist_rec.demo:main"
 ease = "anilist_rec.ease:main"
 als = "anilist_rec.als:main"
 sasrec = "anilist_rec.sasrec:main"
+compare = "anilist_rec.compare:main"
 export-bundle = "anilist_rec.bundle:main"
 
 # CPU wheels: the dev boxes have no CUDA and the PyPI linux wheels drag the
@@ -55,6 +56,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*" = ["B018"]  # a marimo cell's trailing bare expression is its output
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
