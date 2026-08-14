@@ -11,6 +11,7 @@ import argparse
 import time
 from pathlib import Path
 
+import numpy as np
 import polars as pl
 
 from anilist_rec.config import Config
@@ -40,6 +41,8 @@ def run(cfg: Config, report_path: Path) -> dict[str, dict[str, float]]:
     stage("training matrix")
     item_ids = item_index(signals)
     x_train, item_counts = build_training_matrix(cfg, signals, item_ids, holdout_users)
+    cfg.derived_dir.mkdir(parents=True, exist_ok=True)
+    np.save(cfg.item_counts_path, item_counts)  # serving path reloads without the matrix
 
     stage("franchise index")
     catalogue = pl.read_parquet(cfg.crosswalk_path)

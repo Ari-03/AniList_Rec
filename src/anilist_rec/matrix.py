@@ -22,14 +22,22 @@ def item_positions(item_ids: np.ndarray) -> dict[int, int]:
 
 
 def build_training_matrix(
-    cfg: Config, signals: pl.LazyFrame, item_ids: np.ndarray, holdout_users: set[str]
+    cfg: Config,
+    signals: pl.LazyFrame,
+    item_ids: np.ndarray,
+    holdout_users: set[str],
+    signed: bool = False,
 ) -> tuple[sp.csr_matrix, np.ndarray]:
-    """Returns (X_train user-by-item CSR, per-item training user counts).
+    """Returns (X_train user-by-item CSR, per-item positive training user counts).
 
     Training pool = every user outside the holdout with ≥1 positive-weight row;
     cfg.train_user_cap seed-samples that pool (dev speed only — None for real runs).
+    `signed=True` keeps NEG rows as negative values for candidates that model
+    negatives (SPEC §4); item counts stay positive-only either way (popularity
+    for the dial and guardrails means positive interactions).
     """
-    triples = signals.filter(pl.col("weight") > 0).filter(
+    weight_filter = pl.col("weight") != 0 if signed else pl.col("weight") > 0
+    triples = signals.filter(weight_filter).filter(
         ~pl.col("user_id").is_in(sorted(holdout_users))
     )
     if cfg.train_user_cap is not None:
@@ -47,9 +55,12 @@ def build_training_matrix(
     item_codes = np.searchsorted(item_ids, df["anime_id"].to_numpy()).astype(np.int32)
 
     n_items = len(item_ids)
+    weights = df["weight"].to_numpy()
     x_train = sp.csr_matrix(
-        (df["weight"].to_numpy(), (user_codes, item_codes)),
+        (weights, (user_codes, item_codes)),
         shape=(int(user_codes.max()) + 1, n_items),
     )
-    item_counts = np.bincount(item_codes, minlength=n_items).astype(np.float64)
+    item_counts = np.bincount(
+        item_codes[weights > 0] if signed else item_codes, minlength=n_items
+    ).astype(np.float64)
     return x_train, item_counts

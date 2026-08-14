@@ -1,6 +1,7 @@
 """Signal mapping (SPEC §1, adapted to svanoo's MAL statuses — no REPEATING)."""
 
 import polars as pl
+import pytest
 
 from anilist_rec.signals import NEG, PARTIAL, PLAN, STD, STRONG, map_signals
 
@@ -56,13 +57,20 @@ def test_completed_unscored_or_mid_is_standard():
     assert kind_weight({"status": "completed", "score": 7}) == (STD, 1.0)
 
 
-def test_completed_low_score_is_negative():
-    assert kind_weight({"status": "completed", "score": 4}) == (NEG, 0.0)
-    assert kind_weight({"status": "completed", "score": 1}) == (NEG, 0.0)
+def test_completed_low_score_is_mild_negative():
+    assert kind_weight({"status": "completed", "score": 4}) == (NEG, -0.25)
+    assert kind_weight({"status": "completed", "score": 1}) == (NEG, -0.25)
 
 
-def test_dropped_is_negative():
-    assert kind_weight({"status": "dropped", "score": 9}) == (NEG, 0.0)
+def test_dropped_is_negative_with_confidence_inverse_to_progress():
+    # unknown progress: midpoint confidence
+    assert kind_weight({"status": "dropped", "score": 9}) == (NEG, -0.625)
+    # dropped at ep 2 of 10 ≫ dropped at ep 8 of 10 (SPEC §1)
+    early = kind_weight({"status": "dropped", "anime_id": 7, "progress": 2}, episodes={7: 10.0})
+    late = kind_weight({"status": "dropped", "anime_id": 7, "progress": 8}, episodes={7: 10.0})
+    assert early == (NEG, pytest.approx(-0.85))
+    assert late == (NEG, pytest.approx(-0.4))
+    assert early[1] < late[1] < 0
 
 
 def test_watching_weight_scales_with_progress():

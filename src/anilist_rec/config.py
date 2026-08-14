@@ -47,3 +47,8 @@ class Config:
     def similarity_path(self) -> Path:
         cap = self.train_user_cap if self.train_user_cap is not None else "none"
         return self.derived_dir / f"sim_bm25_K{self.k_neighbors}_cap{cap}_seed{self.seed}.npz"
+
+    @property
+    def item_counts_path(self) -> Path:
+        cap = self.train_user_cap if self.train_user_cap is not None else "none"
+        return self.derived_dir / f"item_counts_cap{cap}_seed{self.seed}.npy"

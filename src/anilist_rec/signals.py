@@ -8,9 +8,10 @@ import polars as pl
 
 from anilist_rec.config import Config
 
-# Signal kinds. The weight column is positive-preference confidence only, so
-# PLAN (never trains) and NEG rows carry 0.0; candidates that model negatives
-# (SPEC §4, carried in §9) re-derive their confidence from interactions.parquet.
+# Signal kinds. The weight column is signed preference confidence: positive
+# for training positives, negative for NEG rows (candidates that model
+# negatives — SPEC §4 — read the sign; positive-only consumers filter
+# weight > 0 as before), and 0.0 for PLAN, which never trains.
 NEG, STD, STRONG, PARTIAL, PLAN = 0, 1, 2, 3, 4
 
 # Graded gains for NDCG (SPEC §5): strong positives count double.
@@ -39,10 +40,13 @@ def kind_expr() -> pl.Expr:
 
 
 def weight_expr() -> pl.Expr:
-    """Training weight given a `kind` column; needs `episodes` joined in for watching rows."""
+    """Signed training weight given a `kind` column; needs `episodes` joined in."""
     status = pl.col("status").cast(pl.String)
     # confidence scaled by progress/episodes (SPEC §1 CURRENT); midpoint when unknown
-    watch_w = 0.5 + 0.5 * ((pl.col("progress") / pl.col("episodes")).clip(0.0, 1.0).fill_null(0.5))
+    progress_ratio = (pl.col("progress") / pl.col("episodes")).clip(0.0, 1.0).fill_null(0.5)
+    watch_w = 0.5 + 0.5 * progress_ratio
+    # DROPPED confidence inverse to progress (SPEC §1: dropped at ep 2 ≫ ep 20)
+    drop_w = -(0.25 + 0.75 * (1.0 - progress_ratio))
     return (
         pl.when(pl.col("kind") == STRONG)
         .then(2.0)
@@ -52,6 +56,10 @@ def weight_expr() -> pl.Expr:
         .then(watch_w)
         .when(pl.col("kind") == PARTIAL)
         .then(0.25)
+        .when((pl.col("kind") == NEG) & (status == "dropped"))
+        .then(drop_w)
+        .when(pl.col("kind") == NEG)
+        .then(-0.25)  # mild negative: completed but scored ≤ 4/10
         .otherwise(0.0)
     )
 
