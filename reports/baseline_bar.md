@@ -1,6 +1,6 @@
 # Baseline bar — full-scale offline eval
 
-Generated 2026-08-13 19:30 UTC by `uv run baseline`
+Generated 2026-08-14 18:51 UTC by `uv run baseline`
 ([Ari-03/AniList_Rec#14](https://github.com/Ari-03/AniList_Rec/issues/14)).
 Protocol: SPEC §5 — held-out users, per-user temporal 80/20, full-catalogue
 ranking through the serving pipeline (franchise filter on), dial off, test users.
