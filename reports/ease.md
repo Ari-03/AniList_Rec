@@ -1,6 +1,6 @@
 # EASE candidate — offline eval
 
-Generated 2026-08-14 08:22 UTC by `uv run ease`
+Generated 2026-08-15 02:58 UTC by `uv run ease`
 ([Ari-03/AniList_Rec#16](https://github.com/Ari-03/AniList_Rec/issues/16)).
 Protocol: SPEC §5 — held-out users, temporal 80/20, full-catalogue ranking
 through the serving pipeline (franchise filter on), dial off.
@@ -23,7 +23,7 @@ Encoding ablation at λ=6.4e+07 (validation NDCG@10): signed X
 
 | λ | val NDCG@10 [95% CI] |
 |---|---|
-| 50000 | 0.1284 [0.1255, 0.1313] |
+| 50000 | 0.1283 [0.1255, 0.1312] |
 | 250000 | 0.1391 [0.1362, 0.1420] |
 | 1e+06 | 0.1558 [0.1526, 0.1590] |
 | 4e+06 | 0.1808 [0.1774, 0.1843] |
@@ -45,7 +45,7 @@ Top-k by |value| per column; dense B is 715 MB.
 
 Shipped: top-200 (largest loss tolerated: 0.001).
 Artifact: `ease_B_seed42.npz`, 13.8 MB.
-Full fit + sweep walltime: 969s.
+Full fit + sweep walltime: 1393s.
 
 ## Test-set metrics (dial off, sparse artifact)
 
@@ -57,22 +57,3 @@ Two-sided bar (SPEC §4): beat item-item BM25 **0.1300** and MostPopular
 **0.1983** on NDCG@10 without degenerate coverage — see
 [baseline_bar.md](baseline_bar.md). Niche popularity lift is EASE's known
 risk; Gram-normalization is the documented cheap mitigation if it's bad.
-
-## Gram-normalization mitigation (measured)
-
-The documented popularity mitigation was run end-to-end (`uv run ease
---gram-norm`, full report in [ease_gram_norm.md](ease_gram_norm.md)); its λ
-peak sits at 256 (normalized diagonal ~1). Test, dial off:
-
-| model | NDCG@10 [95% CI] | recall@10 | recall@50 | regret@10 | pop lift | pop lift (niche) | coverage@10 |
-|---|---|---|---|---|---|---|---|
-| EASE plain (λ=6.4e7, top-200) | 0.2247 [0.2208, 0.2286] | 0.139 | 0.332 | 0.0057 | +2.9 | +7.2 | 2.0% |
-| EASE gram-norm (λ=256, top-800) | 0.2008 [0.1968, 0.2047] | 0.139 | 0.362 | 0.0040 | +2.2 | +5.0 | 7.7% |
-
-A genuine trade, not a free win: gram-norm nearly quadruples coverage,
-cuts niche popularity lift from +7.2 to +5.0, improves recall@50 and
-regret — but gives back ~0.024 NDCG@10, landing within CI noise of
-MostPopular (0.1983), so it does **not** cleanly clear the two-sided bar
-on its own. The shipped #16 artifact stays plain EASE; the winner-selection
-pass (#19) should weigh gram-norm against the popularity dial as the two
-available popularity controls (note the dial can be applied to either).

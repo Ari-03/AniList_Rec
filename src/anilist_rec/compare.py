@@ -276,10 +276,16 @@ MostPopular **{bars["MostPopular"]["ndcg10"]:.4f}** on NDCG@10 with coverage@10 
 
 ## Dial sweep (validation users)
 
-The dial is the SPEC §1 serve-time popularity re-rank — scores divided by
-`(training popularity + 1)^dial` — architecture-independent and applied inside
-the same serving path the export container runs
-([export contract](../docs/export-contract.md)).
+The dial is the SPEC §1 serve-time popularity re-rank, computed in **rank
+space**: per-user score percentile minus `dial x` popularity percentile,
+applied inside the same serving path the export container runs
+([export contract](../docs/export-contract.md)). Rank space is what makes the
+0-1 knob architecture-independent in practice: the first formulation divided
+raw scores by `(popularity + 1)^dial`, and its useful range collapsed with the
+winner's score scale (NDCG@10 fell 0.369 -> 0.173 by dial 0.1 on SASRec logits
+while EASE barely moved before 0.6). Percentiles are scale-free, so the same
+dial value trades the same amount of preference for popularity on every
+candidate.
 
 ![NDCG@10 vs popularity lift]({svg_path.name})
 
@@ -294,15 +300,23 @@ curve. The export bundle bakes this as `dial_default`
 (`export-bundle --dial-default {default_dial:g}`); callers override per
 request.
 
+Context for reading the winner's curve: {winner}'s dial-off popularity lift is
+{curves[winner][0.0]["pop_lift"]:+.1f} — the §1 Kowald failure mode the dial
+was designed to correct is not present at dial off, so the default buys
+nothing and every nonzero setting is a pure accuracy-for-novelty trade. NDCG
+against held-out watches punishes that trade by construction (what users
+actually watched next skews popular), which is why the dial ships as a
+caller-facing novelty knob rather than a correction. Its quality in the
+novelty regime is judged by the vibe check, not by this metric.
+
 ## Vibe check
 
 Per finalist: `notebooks/vibe_check.py` (marimo) pulls the owner's AniList
-list through the real serving path and renders the top-20 at dial off /
-{default_dial:g} (default) / 1.0 (high-novelty) with covers, genres, and
-why-this lines; each rec is labeled seen-elsewhere / would-watch / plausible /
-bad / broken and the tallies land in `reports/vibe_check_<model>.md`. Judged
-as a 2022-era time capsule (SPEC §3/§5 caveat): staleness is not model
-failure.
+list through the real serving path and renders the top-20 at three dial
+settings with covers, genres, and why-this lines; each rec is labeled
+seen-elsewhere / would-watch / plausible / bad / broken and the tallies land
+in `reports/vibe_check_<model>.md`. Judged as a 2022-era time capsule
+(SPEC §3/§5 caveat): staleness is not model failure.
 
 ## Seed and provenance
 

@@ -61,11 +61,13 @@ def test_replay_reproduces_scorer_through_evaluate():
     replayed = evaluate(users, replay_scorer(scores), franchise, counts, chunk=3)
     np.testing.assert_allclose(direct.ndcg10, replayed.ndcg10)
 
-    # and the dial changes the ranking inside evaluate, matching a manual re-rank
+    # and evaluate's dial path matches applying the re-rank to the scores directly
+    from anilist_rec.models import apply_dial
+
     dialed = evaluate(users, replay_scorer(scores), franchise, counts, chunk=3, dial=1.0)
     manual = evaluate(
         users,
-        replay_scorer(scores / np.power(counts + 1.0, 1.0).astype("float32")),
+        replay_scorer(apply_dial(scores, counts, 1.0)),
         franchise,
         counts,
         chunk=3,

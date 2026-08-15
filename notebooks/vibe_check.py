@@ -54,10 +54,14 @@ def _(mo):
 @app.cell
 def _():
     LABELS = ["seen-elsewhere", "would-watch", "plausible", "bad", "broken"]
-    SHIPPED_DEFAULT_DIAL = 0.15  # from the §5 validation sweep (reports/eval.md)
-    HIGH_NOVELTY_DIAL = 1.0
+    # The §5 sweep (reports/eval.md) shipped dial_default = 0: the winner is
+    # popularity-neutral at dial off, so "default" and "off" coincide and the
+    # two nonzero passes probe the novelty knob instead.
+    SHIPPED_DEFAULT_DIAL = 0.0
+    MODERATE_DIAL = 0.05
+    HIGH_NOVELTY_DIAL = 0.2
     TOP_K = 20
-    return HIGH_NOVELTY_DIAL, LABELS, SHIPPED_DEFAULT_DIAL, TOP_K
+    return HIGH_NOVELTY_DIAL, LABELS, MODERATE_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K
 
 
 @app.cell
@@ -179,14 +183,16 @@ def _(mo, recommender, run, username):
 
 
 @app.cell
-def _(HIGH_NOVELTY_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K, fold, mo, recommender, run):
+def _(HIGH_NOVELTY_DIAL, MODERATE_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K, fold, mo, recommender, run):
     mo.stop(not run.value)
     recs_by_dial = {
-        "off": recommender.recommend_foldin(fold, dial=0.0, limit=TOP_K),
-        f"default ({SHIPPED_DEFAULT_DIAL:g})": recommender.recommend_foldin(
+        f"off (= shipped default {SHIPPED_DEFAULT_DIAL:g})": recommender.recommend_foldin(
             fold, dial=SHIPPED_DEFAULT_DIAL, limit=TOP_K
         ),
-        f"high-novelty ({HIGH_NOVELTY_DIAL:g})": recommender.recommend_foldin(
+        f"moderate novelty ({MODERATE_DIAL:g})": recommender.recommend_foldin(
+            fold, dial=MODERATE_DIAL, limit=TOP_K
+        ),
+        f"high novelty ({HIGH_NOVELTY_DIAL:g})": recommender.recommend_foldin(
             fold, dial=HIGH_NOVELTY_DIAL, limit=TOP_K
         ),
     }

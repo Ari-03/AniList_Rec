@@ -33,7 +33,7 @@
     },
     {
       "id": "vblA",
-      "code_hash": "05454c2737751a516e675a8eead46862",
+      "code_hash": "58d5ea5e4f6e7cdc725018dbb39ddf32",
       "outputs": [
         {
           "type": "data",
@@ -51,7 +51,7 @@
         {
           "type": "data",
           "data": {
-            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Artifacts on disk: <strong>bm25 (baseline)</strong> (data dir <code>/home/ari/.t3/worktrees/AniRec/t3code-23aebc1b/data</code>)</span></span>"
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Artifacts on disk: <strong>bm25 (baseline), EASE, ALS, SASRec</strong> (data dir <code>/home/ari/.t3/worktrees/AniRec/t3code-23aebc1b/data</code>)</span></span>"
           }
         }
       ],
@@ -64,7 +64,7 @@
         {
           "type": "data",
           "data": {
-            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='lEQa-0' random-id='68c0d46e-86ad-cce0-e8a6-66d58c71875c'><marimo-text data-initial-value='&quot;Zackhacks&quot;' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eAniList username&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-placeholder='&quot;&quot;' data-kind='&quot;text&quot;' data-full-width='false' data-disabled='false' data-debounce='true'></marimo-text></marimo-ui-element><marimo-ui-element object-id='lEQa-1' random-id='5c383825-9752-e832-fc61-316f0e424913'><marimo-dropdown data-initial-value='[&quot;bm25 (baseline)&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003efinalist&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;bm25 (baseline)&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='lEQa-2' random-id='0e7f00ce-f533-eff5-7550-cda10f9f1f94'><marimo-button data-initial-value='0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eFetch list and rank&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-kind='&quot;neutral&quot;' data-disabled='false' data-full-width='false'></marimo-button></marimo-ui-element></div>"
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='lEQa-0' random-id='95b7fa21-38ff-8da8-8f11-4a1f1250c907'><marimo-text data-initial-value='&quot;Zackhacks&quot;' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eAniList username&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-placeholder='&quot;&quot;' data-kind='&quot;text&quot;' data-full-width='false' data-disabled='false' data-debounce='true'></marimo-text></marimo-ui-element><marimo-ui-element object-id='lEQa-1' random-id='37e66c5c-5c43-d003-0be8-fc5355db5512'><marimo-dropdown data-initial-value='[&quot;SASRec&quot;]' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003efinalist&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-options='[&quot;bm25 (baseline)&quot;,&quot;EASE&quot;,&quot;ALS&quot;,&quot;SASRec&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false' data-disabled='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='lEQa-2' random-id='296a7301-e814-5c53-2118-a274777a30c8'><marimo-button data-initial-value='0' data-label='&quot;&#92;u003cspan class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&#92;u003e&#92;u003cspan class=&#92;&quot;paragraph&#92;&quot;&#92;u003eFetch list and rank&#92;u003c/span&#92;u003e&#92;u003c/span&#92;u003e&quot;' data-kind='&quot;neutral&quot;' data-disabled='false' data-full-width='false'></marimo-button></marimo-ui-element></div>"
           }
         }
       ],
@@ -111,7 +111,7 @@
     },
     {
       "id": "BYtC",
-      "code_hash": "8da593e2b5374d6df93c3189ab201c10",
+      "code_hash": "962fd7a5ec456d0efc1b9f456b817072",
       "outputs": [
         {
           "type": "error",
