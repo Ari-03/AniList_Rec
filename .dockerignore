@@ -1,7 +1,10 @@
 data/
 .venv/
+.git/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
-*.egg-info/
-__marimo__/
+notebooks/
+reports/
+tests/
+docs/

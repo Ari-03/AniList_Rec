@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="440" viewBox="0 0 720 440" role="img" aria-label="Validation NDCG at 10 versus popularity lift across dial settings">
+<rect width="720" height="440" fill="#fcfcfb"/>
+<text x="64" y="24" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Dial sweep — validation NDCG@10 vs popularity lift</text>
+<text x="64" y="41" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e">Each point is one dial setting; dial rises as popularity lift falls</text>
+<line x1="64" y1="360.2" x2="570" y2="360.2" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="364.2" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="end">0.000</text>
+<line x1="64" y1="208.2" x2="570" y2="208.2" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="212.2" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="end">0.200</text>
+<line x1="64" y1="56.3" x2="570" y2="56.3" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="60.3" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="end">0.400</text>
+<text x="90.2" y="406" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="middle">-75</text>
+<text x="233.0" y="406" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="middle">-50</text>
+<text x="375.8" y="406" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="middle">-25</text>
+<text x="518.6" y="406" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" fill="#898781" text-anchor="middle">+0</text>
+<line x1="64" y1="388" x2="570" y2="388" stroke="#c3c2b7" stroke-width="1"/>
+<text x="317" y="426" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="middle">popularity lift (top-10 percentile minus profile percentile)</text>
+<text x="18" y="220" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#52514e" text-anchor="middle" transform="rotate(-90 18 220)">validation NDCG@10</text>
+<polyline points="517.7,80.0 391.5,320.6 316.4,353.1 274.8,357.9 246.3,359.0 209.8,359.5 188.0,359.7 162.9,359.9 147.3,359.9 135.7,360.0" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="517.7" cy="80.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="517.7" y="71.0" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 0</text>
+<circle cx="391.5" cy="320.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="316.4" cy="353.1" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="274.8" cy="357.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="246.3" cy="359.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="209.8" cy="359.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="209.8" y="350.5" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 0.3</text>
+<circle cx="188.0" cy="359.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="162.9" cy="359.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="147.3" cy="359.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="135.7" cy="360.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="135.7" y="351.0" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 1</text>
+<text x="527.7" y="84.0" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#2a78d6">SASRec</text>
+<polyline points="535.1,189.7 535.0,189.9 534.7,190.4 534.3,191.7 533.3,193.1 530.5,198.5 525.3,207.7 452.6,297.2 222.3,358.2 98.9,359.7" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="535.1" cy="189.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<text x="535.1" y="180.7" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 0</text>
+<circle cx="535.0" cy="189.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="534.7" cy="190.4" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="534.3" cy="191.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="533.3" cy="193.1" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="530.5" cy="198.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<text x="530.5" y="189.5" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 0.3</text>
+<circle cx="525.3" cy="207.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="452.6" cy="297.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="222.3" cy="358.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="98.9" cy="359.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<text x="98.9" y="350.7" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="10.5" fill="#52514e" text-anchor="middle">dial 1</text>
+<text x="545.1" y="193.7" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#eb6834">EASE</text>
+<circle cx="588" cy="60" r="4" fill="#2a78d6"/>
+<text x="598" y="64" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#0b0b0b">SASRec</text>
+<circle cx="588" cy="80" r="4" fill="#eb6834"/>
+<text x="598" y="84" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#0b0b0b">EASE</text>
+</svg>

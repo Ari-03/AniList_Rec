@@ -55,26 +55,24 @@ def load_candidate_recommender(cfg: Config, model: str) -> Recommender:
     franchise = build_franchise_index(catalogue, item_ids)
     item_counts = np.load(cfg.item_counts_path)
 
-    if model == "ease":
-        from anilist_rec.ease import ease_artifact_path, ease_scorer
+    from anilist_rec.als import als_artifact_path
+    from anilist_rec.bundle import _load_scorer
+    from anilist_rec.ease import ease_artifact_path
+    from anilist_rec.sasrec import sasrec_artifact_path
 
-        score_fn = ease_scorer(sp.load_npz(ease_artifact_path(cfg)))
-    else:
-        from anilist_rec.als import als_artifact_path, als_scorer
-
-        artifact = np.load(als_artifact_path(cfg))
-        score_fn = als_scorer(
-            artifact["item_factors"],
-            float(artifact["regularization"]),
-            float(artifact["alpha"]),
-        )
+    artifact_path = {
+        "ease": ease_artifact_path(cfg),
+        "als": als_artifact_path(cfg),
+        "sasrec": sasrec_artifact_path(cfg),
+    }[model]
+    score_fn = _load_scorer(model, artifact_path, len(item_ids))
     return Recommender(score_fn, item_ids, franchise, item_counts, catalogue)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("username")
-    parser.add_argument("--model", choices=["bm25", "ease", "als"], default="bm25")
+    parser.add_argument("--model", choices=["bm25", "ease", "als", "sasrec"], default="bm25")
     parser.add_argument("--dial", type=float, default=0.0)
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--data-dir", type=Path, default=Path("data"))

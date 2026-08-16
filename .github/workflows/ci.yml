@@ -1,0 +1,57 @@
+# Lint + tests, then the container contract smoke (issue #20): build the image
+# around a synthetic fixture bundle and exercise the SPEC §6 contract from
+# outside — the dev boxes have no docker, so CI is where the container itself
+# is proven.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen --extra service
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+
+  container-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build fixture bundle
+        run: |
+          uv sync --frozen
+          uv run python tests/fixture_bundle.py bundle
+      - name: Build image
+        run: docker build -t anirec-scoring .
+      - name: Contract smoke test
+        run: |
+          docker run -d --rm -p 8000:8000 --name anirec anirec-scoring
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/health && break
+            sleep 2
+          done
+          set -x
+          # health carries model_version
+          curl -sf http://localhost:8000/health | grep -q model_version
+          # secondary endpoint: raw entries in, ranked bare ids out
+          curl -sf -X POST http://localhost:8000/recommend/raw \
+            -H 'Content-Type: application/json' \
+            -d '{"entries": [{"media_id": 3000, "status": "COMPLETED", "score": 90}]}' \
+            | grep -q '"anilist_id":1000'
+          # the dial knob re-ranks
+          curl -sf -X POST http://localhost:8000/recommend/raw \
+            -H 'Content-Type: application/json' \
+            -d '{"entries": [{"media_id": 3000, "status": "COMPLETED", "score": 90}], "dial": 1.0}' \
+            | grep -q '"anilist_id":4000'
+          # MANGA is reserved: 501
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            http://localhost:8000/recommend/raw -H 'Content-Type: application/json' \
+            -d '{"entries": [], "type": "MANGA"}')" = "501"
+          docker stop anirec
