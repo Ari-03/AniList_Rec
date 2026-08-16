@@ -24,7 +24,7 @@ failure.
 
 import marimo
 
-__generated_with = "0.14.0"
+__generated_with = "0.23.16"
 app = marimo.App(width="medium")
 
 
@@ -37,17 +37,15 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        """
-        # Vibe check — the export's eyes on your own list
+    mo.md("""
+    # Vibe check — the export's eyes on your own list
 
-        [Issue #19](https://github.com/Ari-03/AniList_Rec/issues/19) ·
-        [SPEC §5](https://github.com/Ari-03/AniList_Rec/blob/main/SPEC.md).
-        Ranked through the same serving path the container runs. Label every
-        rec, then export the tallies. **Time-capsule caveat:** nothing after
-        2022-03-22 exists here.
-        """
-    )
+    [Issue #19](https://github.com/Ari-03/AniList_Rec/issues/19) ·
+    [SPEC §5](https://github.com/Ari-03/AniList_Rec/blob/main/SPEC.md).
+    Ranked through the same serving path the container runs. Label every
+    rec, then export the tallies. **Time-capsule caveat:** nothing after
+    2022-03-22 exists here.
+    """)
     return
 
 
@@ -61,7 +59,13 @@ def _():
     MODERATE_DIAL = 0.05
     HIGH_NOVELTY_DIAL = 0.2
     TOP_K = 20
-    return HIGH_NOVELTY_DIAL, LABELS, MODERATE_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K
+    return (
+        HIGH_NOVELTY_DIAL,
+        LABELS,
+        MODERATE_DIAL,
+        SHIPPED_DEFAULT_DIAL,
+        TOP_K,
+    )
 
 
 @app.cell
@@ -137,7 +141,7 @@ def _(artifact_paths, available, catalogue, cfg, mo, model, np, run):
         np.load(cfg.item_counts_path),
         catalogue,
     )
-    return arch, artifact_path, item_ids, recommender, sp
+    return arch, artifact_path, recommender, sp
 
 
 @app.cell
@@ -172,19 +176,41 @@ def _(arch, artifact_path, np, sp):
 @app.cell
 def _(mo, recommender, run, username):
     mo.stop(not run.value)
-    user_list = recommender.client.fetch_user(username.value)
-    fold = recommender.fold_in(user_list)
-    mo.md(
-        f"**{username.value}**: {fold.n_entries} entries, {len(fold.fold_idx)} folded in, "
-        f"{len(fold.plan_idx)} planning, {fold.n_unmapped} outside the corpus "
-        f"({fold.n_unmapped / max(fold.n_entries, 1):.1%} — the §3 time-capsule cost)"
-    )
+
+    from anilist_rec.anilist import AniListError as _AniListError
+
+    try:
+        user_list = recommender.client.fetch_user(username.value)
+    except _AniListError as _exc:
+        user_list = None
+        fold = None
+        _fetch_result = mo.md(
+            "**Could not fetch the AniList profile.** "
+            f"{_exc}. Retry after AniList recovers."
+        )
+    else:
+        fold = recommender.fold_in(user_list)
+        _fetch_result = mo.md(
+            f"**{username.value}**: {fold.n_entries} entries, {len(fold.fold_idx)} folded in, "
+            f"{len(fold.plan_idx)} planning, {fold.n_unmapped} outside the corpus "
+            f"({fold.n_unmapped / max(fold.n_entries, 1):.1%} — the §3 time-capsule cost)"
+        )
+    _fetch_result
     return (fold,)
 
 
 @app.cell
-def _(HIGH_NOVELTY_DIAL, MODERATE_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K, fold, mo, recommender, run):
-    mo.stop(not run.value)
+def _(
+    HIGH_NOVELTY_DIAL,
+    MODERATE_DIAL,
+    SHIPPED_DEFAULT_DIAL,
+    TOP_K,
+    fold,
+    mo,
+    recommender,
+    run,
+):
+    mo.stop(not run.value or fold is None)
     recs_by_dial = {
         f"off (= shipped default {SHIPPED_DEFAULT_DIAL:g})": recommender.recommend_foldin(
             fold, dial=SHIPPED_DEFAULT_DIAL, limit=TOP_K
@@ -200,7 +226,16 @@ def _(HIGH_NOVELTY_DIAL, MODERATE_DIAL, SHIPPED_DEFAULT_DIAL, TOP_K, fold, mo, r
 
 
 @app.cell
-def _(LABELS, catalogue, contributors, fold, mo, recommender, recs_by_dial, run):
+def _(
+    LABELS,
+    catalogue,
+    contributors,
+    fold,
+    mo,
+    recommender,
+    recs_by_dial,
+    run,
+):
     mo.stop(not run.value)
 
     _meta = {int(r["idMal"]): r for r in catalogue.drop_nulls("idMal").iter_rows(named=True)}
@@ -219,10 +254,10 @@ def _(LABELS, catalogue, contributors, fold, mo, recommender, recs_by_dial, run)
         genres = ", ".join((m.get("genres") or "").split("|")[:4])
         url = m.get("siteUrl") or f"https://anilist.co/anime/{rec.anilist_id}"
         return (
-            f'<div style="display:flex;gap:12px;align-items:flex-start;margin:8px 0">'
-            f'<img src="{m.get("coverImage_medium") or ""}" width="46" '
-            f'style="border-radius:4px"/>'
-            f'<div><b>{i + 1}.</b> <a href="{url}" target="_blank">'
+            f'<div style="display:flex;gap:12px;align-items:center;max-width:620px">'
+            f'<img src="{m.get("coverImage_medium") or ""}" width="52" '
+            f'style="border-radius:4px;flex-shrink:0"/>'
+            f'<div style="min-width:0"><b>{i + 1}.</b> <a href="{url}" target="_blank">'
             f"<b>{_title(rec.mal_id)}</b></a> "
             f'<small>({m.get("seasonYear") or "?"})</small><br/>'
             f"<small>{genres}</small><br/>"
@@ -231,18 +266,25 @@ def _(LABELS, catalogue, contributors, fold, mo, recommender, recs_by_dial, run)
 
     labelers = {
         name: mo.ui.array(
-            [mo.ui.dropdown(options=LABELS, label=f"#{i + 1}") for i in range(len(recs))]
+            [mo.ui.dropdown(options=LABELS, label="") for _ in range(len(recs))]
         )
         for name, recs in recs_by_dial.items()
     }
+
+    def _row(name, i, rec):
+        # one rec per row: card left, its label dropdown right
+        return mo.hstack(
+            [mo.Html(_card(i, rec)), labelers[name][i]],
+            justify="space-between",
+            align="center",
+            wrap=False,
+        )
+
     tabs = mo.ui.tabs(
         {
-            name: mo.hstack(
-                [
-                    mo.Html("".join(_card(i, r) for i, r in enumerate(recs))),
-                    labelers[name],
-                ],
-                justify="space-between",
+            name: mo.vstack(
+                [_row(name, i, r) for i, r in enumerate(recs)],
+                gap=0.75,
             )
             for name, recs in recs_by_dial.items()
         }
@@ -281,7 +323,18 @@ def _(arch, mo, run):
 
 
 @app.cell
-def _(arch, export, labelers, mo, recs_by_dial, repo_root, run, tallies, tally_md, username):
+def _(
+    arch,
+    export,
+    labelers,
+    mo,
+    recs_by_dial,
+    repo_root,
+    run,
+    tallies,
+    tally_md,
+    username,
+):
     mo.stop(not run.value)
     mo.stop(not export.value, mo.md("*label, then export*"))
     from datetime import UTC, datetime
