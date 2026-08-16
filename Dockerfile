@@ -1,7 +1,8 @@
 # The export container (SPEC §6, issue #20): the scoring service with a model
-# bundle baked in. Build the bundle first, then the image:
+# bundle baked in. Build the bundle first, then the image. The v1 ship (#21):
 #
-#   uv run export-bundle --arch bm25 --out bundle
+#   uv run export-bundle --arch sasrec --dial-default 0 \
+#       --model-version "1.0.0+sasrec.seed42" --out bundle
 #   docker build -t anirec-scoring .
 #   docker run --rm -p 8000:8000 anirec-scoring
 #

@@ -29,7 +29,7 @@ from anilist_rec.anilist import (
     UnknownUserError,
     UserAnimeList,
 )
-from anilist_rec.bundle import load_bundle
+from anilist_rec.bundle import LoadedBundle, load_bundle
 
 MAX_LIMIT = 200
 
@@ -66,13 +66,25 @@ class RawRequest(BaseModel):
     type: MediaType = "ANIME"
 
 
-def build_app(bundle_dir: Path, client: AniListClient | None = None) -> FastAPI:
-    loaded = load_bundle(bundle_dir, client=client)
+def build_app(
+    bundle_dir: Path,
+    client: AniListClient | None = None,
+    loaded: LoadedBundle | None = None,
+) -> FastAPI:
+    """`loaded` lets a caller that already holds the bundle skip the second
+    load (the ship acceptance suite); `client` is ignored when it is passed."""
+    if loaded is None:
+        loaded = load_bundle(bundle_dir, client=client)
     rec = loaded.recommender
     version = loaded.manifest.model_version
     dial_default = loaded.manifest.dial_default
-    # AniList id → MAL id, for raw entries arriving without the MAL side
-    anilist_to_mal = {v: k for k, v in rec.mal_to_anilist.items()}
+    # AniList id → MAL id, for raw entries arriving without the MAL side.
+    # The crosswalk dedupes the MAL side only (SPEC §2: some MAL ids share an
+    # AniList entry), so invert first-wins: mal_to_anilist iterates in
+    # popularity order, keeping the popular mapping deterministically.
+    anilist_to_mal: dict[int, int] = {}
+    for mal, anilist in rec.mal_to_anilist.items():
+        anilist_to_mal.setdefault(anilist, mal)
 
     app = FastAPI(title="AniRec scoring service", version=version)
 
