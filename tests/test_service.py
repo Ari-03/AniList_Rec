@@ -2,23 +2,15 @@
 model_version everywhere, MANGA reserved."""
 
 import pytest
-from fastapi.testclient import TestClient
-from fixture_bundle import FIXTURE_MODEL_VERSION
+from fixture_bundle import FIXTURE_MODEL_VERSION, make_fixture_bundle
+from helpers import raw_body, service_client
 
 from anilist_rec.anilist import AniListClient
-from anilist_rec.service import build_app
 
 
 @pytest.fixture
 def client(bundle_dir):
-    return TestClient(build_app(bundle_dir), raise_server_exceptions=False)
-
-
-def raw_body(**overrides) -> dict:
-    # completed item 3000 (MAL 30, singleton): candidates are 1000/2000/4000
-    body = {"entries": [{"media_id": 3000, "status": "COMPLETED", "score": 90}]}
-    body.update(overrides)
-    return body
+    return service_client(bundle_dir)
 
 
 def test_health_carries_model_version(client):
@@ -61,6 +53,17 @@ def test_dial_demotes_popular(client):
 def test_limit_knob(client):
     resp = client.post("/recommend/raw", json=raw_body(limit=1))
     assert len(resp.json()["recommendations"]) == 1
+
+
+def test_dial_default_comes_from_the_manifest(tmp_path):
+    # a bundle baked with a non-zero default: omitted dial must equal that
+    # default, not dial-off (guards the manifest -> service wiring in CI)
+    client = service_client(make_fixture_bundle(tmp_path / "b", dial_default=0.25))
+    default = client.post("/recommend/raw", json=raw_body()).json()["recommendations"]
+    explicit = client.post("/recommend/raw", json=raw_body(dial=0.25)).json()["recommendations"]
+    off = client.post("/recommend/raw", json=raw_body(dial=0.0)).json()["recommendations"]
+    assert default == explicit
+    assert default != off  # dial 0.25 rescores; dial 0 passes raw scores through
 
 
 @pytest.mark.parametrize("bad", [{"dial": 1.5}, {"dial": -0.1}, {"limit": 0}, {"type": "OVA"}])
@@ -129,10 +132,7 @@ def anilist_ok_transport(payload: dict):
 
 
 def app_with_transport(bundle_dir, transport):
-    return TestClient(
-        build_app(bundle_dir, client=AniListClient(transport=transport)),
-        raise_server_exceptions=False,
-    )
+    return service_client(bundle_dir, anilist_client=AniListClient(transport=transport))
 
 
 def test_recommend_username_live_path(bundle_dir):

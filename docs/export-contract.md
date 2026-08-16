@@ -9,10 +9,15 @@ never speaks Python and never learns which architecture is inside.
 ## Build and run
 
 ```sh
-uv run export-bundle --arch bm25 --out bundle   # assemble model data from data/derived
+# the v1 ship: the SASRec winner with the swept dial default (reports/eval.md)
+uv run export-bundle --arch sasrec --dial-default 0 \
+    --model-version "1.0.0+sasrec.seed42" --out bundle
 docker build -t anirec-scoring .
 docker run --rm -p 8000:8000 anirec-scoring
 ```
+
+(Any trained architecture exports the same way — `--arch bm25` bakes the
+baseline; the service dispatches on the bundle's manifest.)
 
 `export-bundle` bakes: the model artifact (open formats — npz), the corpus item
 universe, popularity counts for the dial, and the AniList↔MAL crosswalk /

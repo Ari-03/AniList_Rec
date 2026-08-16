@@ -62,3 +62,4 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["network: hits the live AniList API (deselect with -m 'not network')"]
